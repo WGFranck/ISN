@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>Graphe</title>
+<meta charset="utf-8"/>
+<script type="text/javascript">
+
+function main () {
+	
+	var xmin = -8;
+	var xmax = 20;
+	var ymin = -9;
+	var ymax = 15;
+	var xgrad = 10;
+	var plot = document.getElementById("curve");
+	var pen = plot.getContext("2d");
+	var width = plot.width;
+	var height = plot.height;
+	var x0 = (width*(-xmax))/(xmax-xmin);
+	var y0 = (height*(-ymin))/(ymin-ymax);
+	
+	pen.moveTo(x0, height/2);
+	pen.lineTo(width, height/2);
+	pen.stroke();
+	pen.moveTo(width/2, y0);
+	pen.lineTo(width/2, height);
+	pen.stroke();
+	
+}
+	
+</script>
+</head>
+<body onload="main()">
+
+<canvas id="curve" width="1000" height="450" style="background: #27FFA1"/>
+
+</body>
+</html>
