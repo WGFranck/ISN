@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>Tri</title>
+<meta charset="utf-8"/>
+<script type="text/javascript">
+
+function main () {
+	
+	
+	/**
+	* Sort an array
+	* @param a array to sort
+	* @param l index of the first element to sort
+	* @param r index of the last element to sort
+	*/
+	function quick_sort(a, l0, r0) {
+		if(l0 < r0){
+			var p = a[l0];
+			l = l0 + 1;
+			r = r0;
+			while (l<=r) {
+				if (a[l]<p) {
+					/* -mettre a[l] dans la case vide
+					(la case vide est l--) 
+					-décaler l à l+1 */
+				
+					a[l-1] = a[l];
+					l = l+1;
+					
+				} else {
+					/* -échanger a[l] et a[r]
+					-décaler r à r-1 */
+							var t = 0;
+					t = a[l];
+					a[l] = a[r];
+					a[r] = t;
+					r = r-1;
+				}
+			}
+			a[l-1] = p;
+			quick_sort(a, l0, r-1);
+			quick_sort(a, l, r0);
+			console.log(l0, r0, a);
+		}
+	}
+	
+	var a = [5, 8, 3, 1, 2, 3, 10, 9];
+	quick_sort(a, 0, a.length - 1);
+	alert(a);
+
+}
+	
+</script>
+</head>
+<body onload="main()">
+
+
+
+</body>
+</html>
