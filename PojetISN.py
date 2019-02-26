@@ -25,6 +25,7 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt, QLine, QRect, QPoint
 
+
 def main() :
 
 #Taille de la fenètre MODIFIABLE 
@@ -50,7 +51,7 @@ def main() :
 #-valeur pour intWindowMode = 0
     canvas = QRect(10, 10, L-20, (H/2)-20)
     
-    canvasExample = QRect((L/2)-50, (H*8/9)-50, 100, 100) 
+    canvasExample = QRect((L/2)-50, (H*8/9)-50, L/7, H/7) 
   
 #initialisation des Button du Home Menu et du mode de création avec un tableau
     homeButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
@@ -81,12 +82,13 @@ def main() :
                 if userElement == len(dictElementElec) :
                     userElement = 0
                 
+            elif not intWindowMode == 0 and canvas.contains(cursorPos):
+               leftClickCanvas = True
+               
             elif not intWindowMode == 0 and not canvas.contains(cursorPos) and not canvasExample.contains(cursorPos):
                 print("vous n'êtes pas dans la zone de travail")
                 leftClickCanvas = False
                     
-            elif not intWindowMode == 0 and canvas.contains(cursorPos):
-               leftClickCanvas = True
                 
             self.update()
 #-----------------------------------------------------------
@@ -108,12 +110,10 @@ def main() :
                 painter.setBrush(Qt.NoBrush)
             
             if leftClickCanvas and intWindowMode == 1 :
-                painter.setPen(pen)
                 dictElementElec[userElement](painter)
                 
             elif leftClickCanvas and intWindowMode == 2:
-                print("work in progress")
-                leftClickCanvas = False
+                dictElementLogic[userElement](painter)
                                 
             self.update()
 #-----------------------------------------------------------
@@ -148,7 +148,7 @@ def main() :
             self.drawLine(createLine(-1, 0.5, 1, 0.5))
             #cable
             self.drawLine(createLine(0, -0.5, 0, -2))
-#-----------------------------------------------------------
+#----------------------------------------------------------
         def diode(self):
             #triangle
             self.drawLine(createLine(-1.5, 1.5, 1.5, 1.5))
@@ -176,9 +176,9 @@ def main() :
         def coil(self):
             
             #definition de la zone à concerver (pour avoir un arc de cercle)
-            aireCoil = QtGui.QRegion(QRect(createPointX(-1), createPointY(-4), createPointX(1), createPointY(4)))
-            zoneSave = QtGui.QRegion(QRect(createPointX(0)-2, createPointY(-4), createPointX(0)-2, createPointY(2)))
-            finalZone = aireCoil.intersected(zoneSave)
+            regElement = QtGui.QRegion(QRect(createPointX(-0.5), createPointY(-4), 1*coefElement, 8*coefElement))
+            saveZone = QtGui.QRegion(QRect(createPointX(0)-2, createPointY(-4), 0.5*coefElement+4, 8*coefElement))
+            finalZone = regElement.intersected(saveZone)
             #définition de la zone de dessin
             self.setClipRegion(finalZone)
             #cable
@@ -212,7 +212,7 @@ def main() :
             self.drawLine(createLine(0, -3, 0, -5))
             self.drawLine(createLine(-1, 3, -1, 5))
             self.drawLine(createLine(1, 3, 1, 5))
-#-----------------------------------------------------------     
+#--------------------------------------------------------     
 #-----------------------------------------------------------     
 #-----------------------------------------------------------     
 #"dicitonaire" faisant l'office d'un "Switch Case" et regroupe toutes les fonctions de la class element dans un tableau, il ne reste plus qu'à faire dictElementElec[n](painter)
@@ -226,7 +226,94 @@ def main() :
            6 : elementElec.coil,
            7 : elementElec.capacitor,
            8 : elementElec.AOP, }
-    
+#-----------------------------------------------------------     
+#-----------------------------------------------------------
+#-----------------------------------------------------------     
+    class elementLogic(QPainter):  
+        
+        def bufferGate(self):
+            #triangle
+            self.drawLine(createLine(-3, 3, 3, 3))
+            self.drawLine(createLine(3, 3, 0,-3))
+            self.drawLine(createLine(0, -3, -3, 3))
+            #cable
+            self.drawLine(createLine(0, -4.5, 0, -3))
+            self.drawLine(createLine(0, 4.5, 0, 3))
+            
+        def notGate(self):
+            elementLogic.bufferGate(self)
+            self.drawEllipse(createPointX(-0.5), createPointY(-3.5), 1*coefElement, 1*coefElement)
+            
+        def orGate(self):
+            
+            #définition de la zone de dessin de la base
+            regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
+            saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-2)-2, 4*coefElement+4, 4*coefElement+4))
+            regBase = regElement.intersected(saveZone)
+            self.setClipRegion(regBase)
+            #base
+            self.drawEllipse(createPointX(-2), createPointY(-2), 4*coefElement, 8*coefElement)
+            self.drawEllipse(createPointX(-2), createPointY(1.5), 4*coefElement, 2*coefElement)
+            #cable
+            self.setClipRegion(regElement)
+            self.drawLine(createLine(0, -2, 0, -4))
+            self.drawLine(createLine(-1, 1.5, -1, 4))
+            self.drawLine(createLine(1, 1.5, 1, 4))
+            
+        def norGate(self):
+            elementLogic.orGate(self)
+            self.drawEllipse(createPointX(-0.5), createPointY(-3), 1*coefElement, 1*coefElement)
+        
+        def xorGate(self):
+            elementLogic.orGate(self)
+            
+            regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
+            saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(2)-2, 4*coefElement+4, 1*coefElement))
+            regBase = regElement.intersected(saveZone)
+            
+            self.setClipRegion(regBase)
+            
+            self.drawEllipse(createPointX(-2), createPointY(2), 4*coefElement, 2*coefElement)
+            
+        def nxorGate(self):
+            elementLogic.norGate(self)
+            elementLogic.xorGate(self)
+            
+            
+        def andGate(self):
+            
+            regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
+            saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-2)-2, 4*coefElement+4, 2*coefElement+4))
+            regBase = regElement.intersected(saveZone)
+            self.setClipRegion(regBase)
+            #base
+            self.drawEllipse(createPointX(-2), createPointY(-1), 4*coefElement, 2*coefElement)
+            self.setClipRegion(regElement)
+            self.drawLine(createLine(-2, 0, -2, 2))
+            self.drawLine(createLine(-2, 2, 2, 2))
+            self.drawLine(createLine(2, 2, 2, 0))
+            #cable
+            self.drawLine(createLine(-1, 2, -1, 4))
+            self.drawLine(createLine(1, 2, 1, 4))
+            self.drawLine(createLine(0, -1, 0, -3))
+            
+        def nandGate(self):
+            elementLogic.andGate(self)
+            self.drawEllipse(createPointX(-0.5), createPointY(-2), 1*coefElement, 1*coefElement)
+#-----------------------------------------------------------     
+#-----------------------------------------------------------
+#-----------------------------------------------------------   
+    dictElementLogic = {
+           0 : elementLogic.bufferGate,
+           1 : elementLogic.notGate,
+           2 : elementLogic.andGate,
+           3 : elementLogic.nandGate,
+           4 : elementLogic.orGate,
+           5 : elementLogic.norGate,
+           6 : elementLogic.xorGate,
+           7 : elementLogic.nxorGate,
+           }
+#-----------------------------------------------------------             
 #Differents callBacks
     def elecMode():
         windowMode(1)
@@ -266,37 +353,29 @@ def main() :
         nonlocal clickPos, coefElement
         return clickPos.y()+Y*coefElement
   
-    def createLine(x1, y1, x2, y2):
-        nonlocal clickPos, coefElement
-        
-        newX1 = clickPos.x()+x1*coefElement
-        newY1 = clickPos.y()+y1*coefElement
-        
-        newX2 = clickPos.x()+x2*coefElement
-        newY2 = clickPos.y()+y2*coefElement
-        
-        return QLine(newX1, newY1, newX2, newY2)
+    def createLine(x1, y1, x2, y2):       
+        return QLine(createPointX(x1), createPointY(y1), createPointX(x2), createPointY(y2))
 #-----------------------------------------------------------  
     def windowMode(state):
         nonlocal H, L, mainWindow, canvas, homeButton, editorButton, intWindowMode
         intWindowMode = state
         
         if state == 0 :
-            mainWindow.close()
             for n in range(4):
                 editorButton[n].close()
             canvas = QRect(10, 10, L-20, (H/2)-20)
 
+            mainWindow.close()
             homeButton[0] = createButton(10, (H*3/6), L-20, (H/6)-10, "Création de schémas électriques", mainWindow, elecMode)
             homeButton[1] = createButton(10, (H*4/6), L-20, (H/6)-10, "Création de schémas logiques", mainWindow, logicMode)
             homeButton[2] = createButton(10, (H*5/6), (L/2)-20, (H/6)-10, "Besoin d'aide ?", mainWindow, null)
             homeButton[3] = createButton((L/2)+10, (H*5/6), (L/2)-20, (H/6)-10, "Fermer l'application", mainWindow, closeProg)
         else :
-            mainWindow.close()
             for n in range(4) :
                 homeButton[n].close()
             canvas.setRect(10, 10, L-20, (H*7/9)-20)
 
+            mainWindow.close()
             editorButton[0] = createButton(10, (H*7/9), (L/4)-20, (H/8)-20, "Gomme", mainWindow, null)
             editorButton[1] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, null)
             editorButton[2] = createButton((L*3/4), (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)    
