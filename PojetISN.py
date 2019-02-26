@@ -3,22 +3,20 @@
 """
 #A faire :
 
-#-pouvoir dessiner plusieurs choses
-
-#-les deux fenêtres pour les modes elec et logique avec un QMenu pour les differents
-#composant 
+#-avoir plusieur élements en même temps
 
 #-le texte "besoin d'aide/Mode d'emploi" (peut être en ouvrant un .doc sur World ?)
 
-#-peut être une QDockWindow pour demander la taille de la fenêtre avant de lancer main() 
+#-peut être une QDockWindow pour demander la taille de la fenêtre et le coefElement avant de lancer main() 
 #vue que l'interface est en fonction de L et H
-#demander à l'utilisateur sa taille des éléments
 
-#clique gauche pour placer et clique droit pour changer la rotation
+#programmer la rotation
 
-#hypothèse : utiliser une boucle for and un newElement = tableau[tableau.lenght + 1] pour aficher tout les elements
+#hypothèse : utiliser une boucle for et un newElement = turple[len(turple.lenght) + 1] pour aficher tout les elements
 
-#enlever la gomme et mettre un bouton qui restera appuyer qui sera un cable avec if x2-1>y2-y1 drawLine x1, x2 
+#-Appuyer sur shift quand lineMode is checked pour faire des lignes horizontal ou verticale
+
+#utiliser un QDockWidget pour le texte de "besoin d'aide"
 
 import sys
 from PyQt5 import QtGui, QtWidgets
@@ -28,29 +26,36 @@ from PyQt5.QtCore import Qt, QLine, QRect, QPoint
 
 def main() :
 
-#Taille de la fenètre MODIFIABLE 
+#Taille de la fenètre MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-toute taille disponible tant que c'est suppérieur 250 et pair
     L  = 700
-    H = 700
+    H = 800
     
-#Booléan du boutton de la souris pour l'orientation des élements. A Faire !
-    leftClickCanvas = False
-#    rightClickCanvas = False
-    leftClickCanvasExample = False
-#initialisation des des positions
+#Booléan du boutton de la souris pour la position des élements.
+    clickCanvas = False
+    
+#l'utilisateur doit clicker une prmière fois pour appeler un élément puis un second click pour le placer sur le canevas
+    initClick = False
+#initialisation des positions
     cursorPos = QPoint()
     clickPos = QPoint()
     
-#Taille des élements MODIFIABLE -et modifiable un jour par l'utilisateur -coefElement > 2 et coefElement pair
-    coefElement = 8    
+#Taille des élements MODIFIABLE dans le programme
+#-et modifiable un jour par l'utilisateur 
+#-coefElement >= 2 et coefElement pair et c'est lisible quand c'est >=6
+    coefElement = 8 
+    
+#élement choisit par l'utilisateur    
     userElement = 0
+    
     intWindowMode = 0
     
+    lineMode = False
 #taille du canevas en fonction de la taille de l'écran non modifiable par l'utilisateur 
-#-valeur pour intWindowMode = 0
+#-valeur pour intWindowMode = 0 servira pour afficher une image
     canvas = QRect(10, 10, L-20, (H/2)-20)
-    
+#Canvas Example est le canvas qui permet de changer d'element ou changer la rotation (théoriquement)    
     canvasExample = QRect((L/2)-50, (H*8/9)-50, L/7, H/7) 
   
 #initialisation des Button du Home Menu et du mode de création avec un tableau
@@ -58,42 +63,46 @@ def main() :
     editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
 #-----------------------------------------------------------     
 #-----------------------------------------------------------     
-#-----------------------------------------------------------
+#class des différents évenement de mainWindow
     class windowEvent(QtWidgets.QMainWindow):
 #-----------------------------------------------------------
          def __init__(self):
-            
             super().__init__()
             self.setMouseTracking(True)
 #-----------------------------------------------------------
          def mouseMoveEvent(self, event):
             nonlocal cursorPos
             cursorPos = event.pos()
+
             self.update()
 #-----------------------------------------------------------            
          def mousePressEvent(self, event):
-            nonlocal leftClickCanvas, leftClickCanvasExample, cursorPos, clickPos, userElement
+            nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement
             clickPos = cursorPos
             
             if not intWindowMode == 0 and canvasExample.contains(cursorPos):
-                leftClickCanvas = True
+                clickCanvas = True
                 userElement = userElement + 1
+                initClick = False
                 
-                if userElement == len(dictElementElec) :
+                if userElement == len(dictElementElec) and intWindowMode == 1:
                     userElement = 0
+                elif userElement == len(dictElementLogic) and intWindowMode == 2:
+                    userElement =0
                 
             elif not intWindowMode == 0 and canvas.contains(cursorPos):
-               leftClickCanvas = True
+               clickCanvas = True
+               initClick = not initClick
                
             elif not intWindowMode == 0 and not canvas.contains(cursorPos) and not canvasExample.contains(cursorPos):
                 print("vous n'êtes pas dans la zone de travail")
-                leftClickCanvas = False
-                    
+                clickCanvas = False
                 
             self.update()
+
 #-----------------------------------------------------------
          def paintEvent(self, event):
-            nonlocal H, L, leftClickCanvas, clickPos, cursorPos, canvas, dictElementElec, canvasExample
+            nonlocal H, L, clickCanvas, initClick, clickPos, cursorPos, canvas, dictElementElec, canvasExample, lineMode
             
             #initialisation du QPainter
             painter = QPainter(self)
@@ -108,17 +117,22 @@ def main() :
                 painter.drawRect(canvas)
                 painter.drawRect(canvasExample)    
                 painter.setBrush(Qt.NoBrush)
+                
+            if initClick:
+                clickPos = cursorPos
             
-            if leftClickCanvas and intWindowMode == 1 :
+            if clickCanvas and intWindowMode == 1 and not lineMode:
                 dictElementElec[userElement](painter)
                 
-            elif leftClickCanvas and intWindowMode == 2:
+            elif clickCanvas and intWindowMode == 2 and not lineMode:
                 dictElementLogic[userElement](painter)
-                                
+            
+            elif lineMode and clickCanvas and canvas.contains(clickPos) and (intWindowMode == 2 or intWindowMode == 1):
+                painter.drawLine(clickPos.x(), clickPos.y(), cursorPos.x(), cursorPos.y())
+            
             self.update()
 #-----------------------------------------------------------
-#-----------------------------------------------------------
-#-----------------------------------------------------------     
+#-----------------------------------------------------------   
 #Les class des élements a pour but de dessiner les élements en fonction de la souris
     class elementElec(QPainter):        
 #-----------------------------------------------------------     
@@ -212,10 +226,10 @@ def main() :
             self.drawLine(createLine(0, -3, 0, -5))
             self.drawLine(createLine(-1, 3, -1, 5))
             self.drawLine(createLine(1, 3, 1, 5))
-#--------------------------------------------------------     
+#----------------------------------------------------------     
 #-----------------------------------------------------------     
 #-----------------------------------------------------------     
-#"dicitonaire" faisant l'office d'un "Switch Case" et regroupe toutes les fonctions de la class element dans un tableau, il ne reste plus qu'à faire dictElementElec[n](painter)
+#"dicitonaire" faisant l'office d'un "Switch Case" et regroupe toutes les fonctions de la class element dans un tableau, il ne reste plus qu'à faire dictElementElec[int](painter)
     dictElementElec = {
            0 : elementElec.resistance,
            1 : elementElec.generator,
@@ -233,16 +247,16 @@ def main() :
         
         def bufferGate(self):
             #triangle
-            self.drawLine(createLine(-3, 3, 3, 3))
-            self.drawLine(createLine(3, 3, 0,-3))
-            self.drawLine(createLine(0, -3, -3, 3))
+            self.drawLine(createLine(-2, 2, 2, 2))
+            self.drawLine(createLine(2, 2, 0,-2))
+            self.drawLine(createLine(0, -2, -2, 2))
             #cable
-            self.drawLine(createLine(0, -4.5, 0, -3))
-            self.drawLine(createLine(0, 4.5, 0, 3))
+            self.drawLine(createLine(0, -4, 0, -2))
+            self.drawLine(createLine(0, 4, 0, 2))
             
         def notGate(self):
             elementLogic.bufferGate(self)
-            self.drawEllipse(createPointX(-0.5), createPointY(-3.5), 1*coefElement, 1*coefElement)
+            self.drawEllipse(createPointX(-0.5), createPointY(-2.5), 1*coefElement, 1*coefElement)
             
         def orGate(self):
             
@@ -295,7 +309,7 @@ def main() :
             #cable
             self.drawLine(createLine(-1, 2, -1, 4))
             self.drawLine(createLine(1, 2, 1, 4))
-            self.drawLine(createLine(0, -1, 0, -3))
+            self.drawLine(createLine(0, -1, 0, -4))
             
         def nandGate(self):
             elementLogic.andGate(self)
@@ -313,7 +327,7 @@ def main() :
            6 : elementLogic.xorGate,
            7 : elementLogic.nxorGate,
            }
-#-----------------------------------------------------------             
+           
 #Differents callBacks
     def elecMode():
         windowMode(1)
@@ -324,15 +338,25 @@ def main() :
     def closeProg():
         mainWindow.close()
         
-    def returnHomeMenu():        
+    def returnHomeMenu():
+        nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas
+        userElement = 0
+        clickCanvas = False
+        initClick = False
+        lineMode = False
         windowMode(0)
         
-#    def clearAll():   présence d'un bug quand on appui ensuite
-#       nonlocal intWindowMode, leftClickCanvas, leftClickCanvasExample
-#        windowMode(intWindowMode)
-#        leftClickCanvas = False
-#        leftClickCanvasExample = False
- 
+    def buttonlineMode():
+        nonlocal lineMode, initClick, editorButton, clickCanvas
+
+        clickCanvas = False
+        if editorButton[0].isChecked():
+            lineMode = True
+            initClick = True
+            
+        else :
+            lineMode = False
+            initClick = False
     def null():
         print("null")
 #-----------------------------------------------------------
@@ -344,7 +368,7 @@ def main() :
         button.clicked.connect(callBack)
         return button
     
-#Les fonctions suivantes on pour but de placer les element en fonction du coef et de la souris (repère : clickPos, coefElement* x->, coefElement* y->)
+#Les fonctions suivantes ont pour but de créer les élements en fonction du coef et de la souris (repère : clickPos, coefElement* x->, coefElement* y->)
     def createPointX(X):
         nonlocal clickPos, coefElement
         return clickPos.x()+X*coefElement
@@ -355,34 +379,37 @@ def main() :
   
     def createLine(x1, y1, x2, y2):       
         return QLine(createPointX(x1), createPointY(y1), createPointX(x2), createPointY(y2))
-#-----------------------------------------------------------  
+    
+#cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
         nonlocal H, L, mainWindow, canvas, homeButton, editorButton, intWindowMode
         intWindowMode = state
         
         if state == 0 :
-            for n in range(4):
+            mainWindow.close()
+            for n in range(len(homeButton)):
                 editorButton[n].close()
             canvas = QRect(10, 10, L-20, (H/2)-20)
 
-            mainWindow.close()
             homeButton[0] = createButton(10, (H*3/6), L-20, (H/6)-10, "Création de schémas électriques", mainWindow, elecMode)
             homeButton[1] = createButton(10, (H*4/6), L-20, (H/6)-10, "Création de schémas logiques", mainWindow, logicMode)
             homeButton[2] = createButton(10, (H*5/6), (L/2)-20, (H/6)-10, "Besoin d'aide ?", mainWindow, null)
             homeButton[3] = createButton((L/2)+10, (H*5/6), (L/2)-20, (H/6)-10, "Fermer l'application", mainWindow, closeProg)
         else :
-            for n in range(4) :
+            mainWindow.close()
+            for n in range(len(homeButton)) :
                 homeButton[n].close()
             canvas.setRect(10, 10, L-20, (H*7/9)-20)
 
-            mainWindow.close()
-            editorButton[0] = createButton(10, (H*7/9), (L/4)-20, (H/8)-20, "Gomme", mainWindow, null)
+            editorButton[0] = createButton(10, (H*7/9), (L/4)-20, (H/8)-20, "Cable", mainWindow, buttonlineMode)
+            editorButton[0].setCheckable(True)
             editorButton[1] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, null)
             editorButton[2] = createButton((L*3/4), (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)    
             editorButton[3] = createButton((L*3/4), (H*8/9), (L/4)-20, (H/8)-20, "Fermer l'application", mainWindow, closeProg)
         
         mainWindow.show()
-#-----------------------------------------------------------
+        
+#Initialisation du mainWindow et le place théoriquement en fonciton de de la resolution de l'écran 
     app = QtWidgets.QApplication(sys.argv)    
 
     mainWindow = QtWidgets.QMainWindow()
@@ -400,13 +427,7 @@ def main() :
     
     windowMode(0)
 #-----------------------------------------------------------   
-#Fenètre suplémantaire qui devra contenir le texte de la partie "besoin d'aide"
-#    interface = QtWidgets.QDockWidget("Guide d'utilisation")
-#    interface.resize(L, H/2)
-#    interface.move(0, 0)
-#-----------------------------------------------------------   
     mainWindow.show()
-#    interface.show()
     sys.exit(app.exec_())
 #-----------------------------------------------------------   
     
