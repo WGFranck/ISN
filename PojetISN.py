@@ -3,7 +3,7 @@
 """
 #A faire :
 
-#-avoir plusieur élements en même temps
+#-avoir plusieur éléments en même temps
 
 #-le texte "besoin d'aide/Mode d'emploi" (peut être en ouvrant un .doc sur World ?)
 
@@ -18,7 +18,11 @@
 
 #utiliser un QDockWidget pour le texte de "besoin d'aide"
 
-import sys
+#créer peut être à la fin un mode save-load
+
+#Rotation des ellipses et un button set rotation
+
+import sys, math
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt, QLine, QRect, QPoint
@@ -32,7 +36,7 @@ def main() :
     L  = 700
     H = 800
     
-#Booléan du boutton de la souris pour la position des élements.
+#Booléan du boutton de la souris pour la position des éléments.
     clickCanvas = False
     
 #l'utilisateur doit clicker une prmière fois pour appeler un élément puis un second click pour le placer sur le canevas
@@ -40,8 +44,8 @@ def main() :
 #initialisation des positions
     cursorPos = QPoint()
     clickPos = QPoint()
-    
-#Taille des élements MODIFIABLE dans le programme
+    print(math.cos(math.pi))
+#Taille des éléments MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-coefElement >= 2 et coefElement pair et c'est lisible quand c'est >=6
     coefElement = 8 
@@ -133,7 +137,7 @@ def main() :
             self.update()
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
-#Les class des élements a pour but de dessiner les élements en fonction de la souris
+#Les class des éléments a pour but de dessiner les éléments en fonction d'un repère
     class elementElec(QPainter):        
 #-----------------------------------------------------------     
         def resistance(self):
@@ -189,15 +193,15 @@ def main() :
 #-----------------------------------------------------------
         def coil(self):
             
+            #cable
+            self.drawLine(createLine(0, -4, 0, -2))
+            self.drawLine(createLine(0, 4, 0, 2))
             #definition de la zone à concerver (pour avoir un arc de cercle)
             regElement = QtGui.QRegion(QRect(createPointX(-0.5), createPointY(-4), 1*coefElement, 8*coefElement))
             saveZone = QtGui.QRegion(QRect(createPointX(0)-2, createPointY(-4), 0.5*coefElement+4, 8*coefElement))
             finalZone = regElement.intersected(saveZone)
-            #définition de la zone de dessin
+            #définition de la nouvelle zone de dessin
             self.setClipRegion(finalZone)
-            #cable
-            self.drawLine(createLine(0, -4, 0, -2))
-            self.drawLine(createLine(0, 4, 0, 2))
             #base (avec le surplus)
             self.drawEllipse(createPointX(-0.5), createPointY(-2), 1*coefElement, 1*coefElement)
             self.drawEllipse(createPointX(-0.5), createPointY(-1), 1*coefElement, 1*coefElement)
@@ -259,20 +263,20 @@ def main() :
             self.drawEllipse(createPointX(-0.5), createPointY(-2.5), 1*coefElement, 1*coefElement)
             
         def orGate(self):
+            #cable
+            self.drawLine(createLine(0, -2, 0, -4))
+            self.drawLine(createLine(-1, 1.5, -1, 4))
+            self.drawLine(createLine(1, 1.5, 1, 4))
             
             #définition de la zone de dessin de la base
             regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
             saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-2)-2, 4*coefElement+4, 4*coefElement+4))
             regBase = regElement.intersected(saveZone)
             self.setClipRegion(regBase)
+            
             #base
             self.drawEllipse(createPointX(-2), createPointY(-2), 4*coefElement, 8*coefElement)
             self.drawEllipse(createPointX(-2), createPointY(1.5), 4*coefElement, 2*coefElement)
-            #cable
-            self.setClipRegion(regElement)
-            self.drawLine(createLine(0, -2, 0, -4))
-            self.drawLine(createLine(-1, 1.5, -1, 4))
-            self.drawLine(createLine(1, 1.5, 1, 4))
             
         def norGate(self):
             elementLogic.orGate(self)
@@ -295,7 +299,11 @@ def main() :
             
             
         def andGate(self):
-            
+            #cable
+            self.drawLine(createLine(-1, 2, -1, 4))
+            self.drawLine(createLine(1, 2, 1, 4))
+            self.drawLine(createLine(0, -1, 0, -4))
+            #définition de la zone de dessin de la base
             regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
             saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-2)-2, 4*coefElement+4, 2*coefElement+4))
             regBase = regElement.intersected(saveZone)
@@ -306,10 +314,6 @@ def main() :
             self.drawLine(createLine(-2, 0, -2, 2))
             self.drawLine(createLine(-2, 2, 2, 2))
             self.drawLine(createLine(2, 2, 2, 0))
-            #cable
-            self.drawLine(createLine(-1, 2, -1, 4))
-            self.drawLine(createLine(1, 2, 1, 4))
-            self.drawLine(createLine(0, -1, 0, -4))
             
         def nandGate(self):
             elementLogic.andGate(self)
@@ -368,7 +372,7 @@ def main() :
         button.clicked.connect(callBack)
         return button
     
-#Les fonctions suivantes ont pour but de créer les élements en fonction du coef et de la souris (repère : clickPos, coefElement* x->, coefElement* y->)
+#Les fonctions suivantes ont pour but de créer les éléments en fonction du coef et de la souris (repère : clickPos, coefElement* x->, coefElement* y->)
     def createPointX(X):
         nonlocal clickPos, coefElement
         return clickPos.x()+X*coefElement
@@ -377,8 +381,16 @@ def main() :
         nonlocal clickPos, coefElement
         return clickPos.y()+Y*coefElement
   
-    def createLine(x1, y1, x2, y2):       
-        return QLine(createPointX(x1), createPointY(y1), createPointX(x2), createPointY(y2))
+    def createLine(x1, y1, x2, y2):
+        nonlocal clickPos, coefElement
+        userRotation = math.pi / 2
+        
+        newX1 = clickPos.x() + x1*math.cos(userRotation)*coefElement - y1*math.sin(userRotation)*coefElement
+        newY1 = clickPos.y() + x1*math.sin(userRotation)*coefElement + y1*math.cos(userRotation)*coefElement
+        newX2 = clickPos.x() + x2*math.cos(userRotation)*coefElement -y2*math.sin(userRotation)*coefElement
+        newY2 = clickPos.y() + x2*math.sin(userRotation)*coefElement + y2*math.cos(userRotation)*coefElement
+        
+        return QLine(newX1, newY1, newX2, newY2)
     
 #cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
