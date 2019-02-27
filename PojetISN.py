@@ -58,7 +58,7 @@ def main() :
 #taille du canevas en fonction de la taille de l'écran non modifiable par l'utilisateur 
 #-valeur pour intWindowMode = 0 servira pour afficher une image
     canvas = QRect(10, 10, L-20, (H/2)-20)
-#Canvas Example est le canvas qui permet de changer d'element ou changer la rotation (théoriquement)    
+#Canvas Example est le canvas qui permet de changer d'element (théoriquement)    
     canvasExample = QRect((L/2)-50, (H*8/9)-50, L/7, H/7) 
   
 #initialisation des Button du Home Menu et du mode de création avec un tableau
@@ -102,7 +102,6 @@ def main() :
                 clickCanvas = False
                 
             self.update()
-
 #-----------------------------------------------------------
          def paintEvent(self, event):
             nonlocal H, L, clickCanvas, initClick, clickPos, cursorPos, canvas, dictElementElec, canvasExample, lineMode
@@ -198,11 +197,8 @@ def main() :
             self.drawLine(createLine(0, -4, 0, -2))
             self.drawLine(createLine(0, 4, 0, 2))
             #base 
-            self.drawArc(createEllipse(0, -1.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
-            self.drawArc(createEllipse(0, -0.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
-            self.drawArc(createEllipse(0, 0.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
-            self.drawArc(createEllipse(0, 1.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
-
+            for n in range(0,4):
+                self.drawArc(createEllipse(0, -1.5 + n, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
 #-----------------------------------------------------------
         def capacitor(self):
             #base
@@ -273,7 +269,7 @@ def main() :
         
         def xorGate(self):
             elementLogic.orGate(self)
-            self.drawArc(createEllipse(0, 3, 4, 2), createHalfAngle(math.pi*22), createHalfAngle(0))
+            self.drawArc(createEllipse(0, 3, 4, 1), createHalfAngle(math.pi*22), createHalfAngle(0))
             
         def nxorGate(self):
             elementLogic.norGate(self)
@@ -293,7 +289,7 @@ def main() :
             
         def nandGate(self):
             elementLogic.andGate(self)
-            self.drawEllipse(createEllipse(0, -1, 1, 1))
+            self.drawEllipse(createEllipse(0, -1.5, 1, 1))
 #-----------------------------------------------------------     
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
@@ -307,7 +303,53 @@ def main() :
            6 : elementLogic.xorGate,
            7 : elementLogic.nxorGate,
            }
-           
+    
+#Les fonctions suivantes ont pour but de créer les éléments en fonction du coef et de la souris (repère : clickPos, coefElement* x->, coefElement* y->)
+    def createPointX(X):
+        nonlocal clickPos, coefElement
+        return clickPos.x()+X*coefElement
+  
+    def createPointY(Y):
+        nonlocal clickPos, coefElement
+        return clickPos.y()+Y*coefElement
+  
+    def createLine(x1, y1, x2, y2):
+        nonlocal clickPos, coefElement, userRotation
+        
+        newX1 = clickPos.x() + x1*math.cos(userRotation)*coefElement - y1*math.sin(userRotation)*coefElement
+        newY1 = clickPos.y() + x1*math.sin(userRotation)*coefElement + y1*math.cos(userRotation)*coefElement
+        newX2 = clickPos.x() + x2*math.cos(userRotation)*coefElement - y2*math.sin(userRotation)*coefElement
+        newY2 = clickPos.y() + x2*math.sin(userRotation)*coefElement + y2*math.cos(userRotation)*coefElement
+        
+        return QLine(newX1, newY1, newX2, newY2)
+    
+    def createEllipse(x, y, largeur, hauteur): #faut faire la rotation sur le cercle en lui même donc la c'est faux
+        nonlocal clickPos, coefElement, userRotation
+        
+        newX1 = clickPos.x() + (x-largeur/2)*math.cos(userRotation)*coefElement - (y-hauteur/2)*math.sin(userRotation)*coefElement
+        newY1 = clickPos.y() + (x-largeur/2)*math.sin(userRotation)*coefElement + (y-hauteur/2)*math.cos(userRotation)*coefElement
+
+        newX2 = ((2*largeur)*math.cos(userRotation)*coefElement - (2*hauteur)*math.sin(userRotation)*coefElement) / 2
+        newY2 = ((2*largeur)*math.sin(userRotation)*coefElement + (2*hauteur)*math.cos(userRotation)*coefElement) / 2
+
+        
+        return QRect(newX1, newY1, newX2, newY2)
+    
+    def createHalfAngle(startAngle):
+        nonlocal userRotation
+        if startAngle == 0:
+            return math.degrees(math.pi)*16
+        else :
+            return math.degrees(startAngle-userRotation)*16
+#-----------------------------------------------------------           
+    def createButton(posX, posY, sizeX, sizeY, texte, widget, callBack) :
+        
+        button = QtWidgets.QPushButton(texte, widget)
+        button.move(posX, posY)
+        button.resize(sizeX, sizeY)
+        button.clicked.connect(callBack)
+        return button
+    
 #Differents callBacks
     def elecMode():
         windowMode(1)
@@ -319,8 +361,9 @@ def main() :
         mainWindow.close()
         
     def returnHomeMenu():
-        nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas
+        nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation
         userElement = 0
+        userRotation = 0
         clickCanvas = False
         initClick = False
         lineMode = False
@@ -345,48 +388,6 @@ def main() :
             initClick = False
     def null():
         print("null")
-#-----------------------------------------------------------
-    def createButton(posX, posY, sizeX, sizeY, texte, widget, callBack) :
-        
-        button = QtWidgets.QPushButton(texte, widget)
-        button.move(posX, posY)
-        button.resize(sizeX, sizeY)
-        button.clicked.connect(callBack)
-        return button
-    
-#Les fonctions suivantes ont pour but de créer les éléments en fonction du coef et de la souris (repère : clickPos, coefElement* x->, coefElement* y->)
-    def createPointX(X):
-        nonlocal clickPos, coefElement
-        return clickPos.x()+X*coefElement
-  
-    def createPointY(Y):
-        nonlocal clickPos, coefElement
-        return clickPos.y()+Y*coefElement
-  
-    def createLine(x1, y1, x2, y2):
-        nonlocal clickPos, coefElement, userRotation
-        
-        newX1 = clickPos.x() + x1*math.cos(userRotation)*coefElement - y1*math.sin(userRotation)*coefElement
-        newY1 = clickPos.y() + x1*math.sin(userRotation)*coefElement + y1*math.cos(userRotation)*coefElement
-        newX2 = clickPos.x() + x2*math.cos(userRotation)*coefElement - y2*math.sin(userRotation)*coefElement
-        newY2 = clickPos.y() + x2*math.sin(userRotation)*coefElement + y2*math.cos(userRotation)*coefElement
-        
-        return QLine(newX1, newY1, newX2, newY2)
-    
-    def createEllipse(x, y, largeur, hauteur): #faut faire la rotation sur le cercle en lui même donc la c'est faux
-        nonlocal clickPos, coefElement, userRotation
-        
-        newX = clickPos.x() + (x-largeur/2)*math.cos(userRotation)*coefElement - (y-hauteur/2)*math.sin(userRotation)*coefElement
-        newY = clickPos.y() + (x-largeur/2)*math.sin(userRotation)*coefElement + (y-hauteur/2)*math.cos(userRotation)*coefElement
-        return QRect(newX, newY, largeur*coefElement, hauteur*coefElement)
-    
-    def createHalfAngle(startAngle):
-        nonlocal userRotation
-        if startAngle == 0:
-            return math.degrees(math.pi)*16
-        else :
-            return math.degrees(startAngle+userRotation)*16
-    
 #cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
         nonlocal H, L, mainWindow, canvas, homeButton, editorButton, intWindowMode
