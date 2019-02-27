@@ -10,8 +10,6 @@
 #-peut être une QDockWindow pour demander la taille de la fenêtre et le coefElement avant de lancer main() 
 #vue que l'interface est en fonction de L et H
 
-#programmer la rotation
-
 #hypothèse : utiliser une boucle for et un newElement = turple[len(turple.lenght) + 1] pour aficher tout les elements
 
 #-Appuyer sur shift quand lineMode is checked pour faire des lignes horizontal ou verticale
@@ -20,7 +18,7 @@
 
 #créer peut être à la fin un mode save-load
 
-#Rotation des ellipses et un button set rotation
+#Rotation des ellipses car c'est pas encore ça
 
 import sys, math
 from PyQt5 import QtGui, QtWidgets
@@ -153,7 +151,7 @@ def main() :
 #-----------------------------------------------------------
         def generator(self):
             #base
-            self.drawEllipse(createPointX(-2), createPointY(-2), 4*coefElement, 4*coefElement)
+            self.drawEllipse(createEllipse(0, 0, 4, 4))
             #cables
             self.drawLine(createLine(0, -4, 0, -2))
             self.drawLine(createLine(0, 4, 0, 2))
@@ -200,10 +198,10 @@ def main() :
             self.drawLine(createLine(0, -4, 0, -2))
             self.drawLine(createLine(0, 4, 0, 2))
             #base 
-            self.drawArc(createEllipse(0, -1.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
-            self.drawArc(createEllipse(0, -0.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
-            self.drawArc(createEllipse(0, 0.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
-            self.drawArc(createEllipse(0, 1.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
+            self.drawArc(createEllipse(0, -1.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
+            self.drawArc(createEllipse(0, -0.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
+            self.drawArc(createEllipse(0, 0.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
+            self.drawArc(createEllipse(0, 1.5, 1, 1), createHalfAngle(math.pi*3/2), createHalfAngle(0))
 
 #-----------------------------------------------------------
         def capacitor(self):
@@ -258,38 +256,24 @@ def main() :
             
         def notGate(self):
             elementLogic.bufferGate(self)
-            self.drawEllipse(createPointX(-0.5), createPointY(-2.5), 1*coefElement, 1*coefElement)
+            self.drawEllipse(createEllipse(0, -2, 1, 1))
             
         def orGate(self):
             #cable
             self.drawLine(createLine(0, -2, 0, -4))
             self.drawLine(createLine(-1, 1.5, -1, 4))
             self.drawLine(createLine(1, 1.5, 1, 4))
-            
-            #définition de la zone de dessin de la base
-            regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
-            saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-2)-2, 4*coefElement+4, 4*coefElement+4))
-            regBase = regElement.intersected(saveZone)
-            self.setClipRegion(regBase)
-            
             #base
-            self.drawEllipse(createPointX(-2), createPointY(-2), 4*coefElement, 8*coefElement)
-            self.drawEllipse(createPointX(-2), createPointY(1.5), 4*coefElement, 2*coefElement)
+            self.drawArc(createEllipse(0, 2, 4, 8), createHalfAngle(math.pi*2), createHalfAngle(0))
+            self.drawArc(createEllipse(0, 2.5, 4, 2), createHalfAngle(math.pi*2), createHalfAngle(0))
             
         def norGate(self):
             elementLogic.orGate(self)
-            self.drawEllipse(createPointX(-0.5), createPointY(-3), 1*coefElement, 1*coefElement)
+            self.drawEllipse(createEllipse(0, -2.5, 1, 1))
         
         def xorGate(self):
             elementLogic.orGate(self)
-            
-            regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
-            saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(2)-2, 4*coefElement+4, 1*coefElement))
-            regBase = regElement.intersected(saveZone)
-            
-            self.setClipRegion(regBase)
-            
-            self.drawEllipse(createPointX(-2), createPointY(2), 4*coefElement, 2*coefElement)
+            self.drawArc(createEllipse(0, 3, 4, 2), createHalfAngle(math.pi*22), createHalfAngle(0))
             
         def nxorGate(self):
             elementLogic.norGate(self)
@@ -301,21 +285,15 @@ def main() :
             self.drawLine(createLine(-1, 2, -1, 4))
             self.drawLine(createLine(1, 2, 1, 4))
             self.drawLine(createLine(0, -1, 0, -4))
-            #définition de la zone de dessin de la base
-            regElement = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-4)-2, 4*coefElement+4, 8*coefElement+4))
-            saveZone = QtGui.QRegion(QRect(createPointX(-2)-2, createPointY(-2)-2, 4*coefElement+4, 2*coefElement+4))
-            regBase = regElement.intersected(saveZone)
-            self.setClipRegion(regBase)
             #base
-            self.drawEllipse(createPointX(-2), createPointY(-1), 4*coefElement, 2*coefElement)
-            self.setClipRegion(regElement)
+            self.drawArc(createEllipse(0, 0, 4, 2), createHalfAngle(math.pi*2), createHalfAngle(0))
             self.drawLine(createLine(-2, 0, -2, 2))
             self.drawLine(createLine(-2, 2, 2, 2))
             self.drawLine(createLine(2, 2, 2, 0))
             
         def nandGate(self):
             elementLogic.andGate(self)
-            self.drawEllipse(createPointX(-0.5), createPointY(-2), 1*coefElement, 1*coefElement)
+            self.drawEllipse(createEllipse(0, -1, 1, 1))
 #-----------------------------------------------------------     
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
@@ -390,24 +368,24 @@ def main() :
         
         newX1 = clickPos.x() + x1*math.cos(userRotation)*coefElement - y1*math.sin(userRotation)*coefElement
         newY1 = clickPos.y() + x1*math.sin(userRotation)*coefElement + y1*math.cos(userRotation)*coefElement
-        newX2 = clickPos.x() + x2*math.cos(userRotation)*coefElement -y2*math.sin(userRotation)*coefElement
+        newX2 = clickPos.x() + x2*math.cos(userRotation)*coefElement - y2*math.sin(userRotation)*coefElement
         newY2 = clickPos.y() + x2*math.sin(userRotation)*coefElement + y2*math.cos(userRotation)*coefElement
         
         return QLine(newX1, newY1, newX2, newY2)
     
-    def createEllipse(x, y, largeur, hauteur):
+    def createEllipse(x, y, largeur, hauteur): #faut faire la rotation sur le cercle en lui même donc la c'est faux
         nonlocal clickPos, coefElement, userRotation
         
         newX = clickPos.x() + (x-largeur/2)*math.cos(userRotation)*coefElement - (y-hauteur/2)*math.sin(userRotation)*coefElement
         newY = clickPos.y() + (x-largeur/2)*math.sin(userRotation)*coefElement + (y-hauteur/2)*math.cos(userRotation)*coefElement
         return QRect(newX, newY, largeur*coefElement, hauteur*coefElement)
     
-    def createHalfAngle(isStartAngle):
+    def createHalfAngle(startAngle):
         nonlocal userRotation
-        if isStartAngle:
-            return math.degrees(userRotation-math.pi/2)*16
-        else :
+        if startAngle == 0:
             return math.degrees(math.pi)*16
+        else :
+            return math.degrees(startAngle+userRotation)*16
     
 #cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
