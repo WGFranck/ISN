@@ -20,6 +20,8 @@
 
 #Rotation des ellipses car c'est pas encore ça
 
+#pour clear all faut reinsialiser les tableaux des éléments
+
 import sys, math
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtGui import QPainter
@@ -42,7 +44,6 @@ def main() :
 #initialisation des positions
     cursorPos = QPoint()
     clickPos = QPoint()
-
 #Taille des éléments MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-coefElement >= 2 et coefElement pair et c'est lisible quand c'est >=6
@@ -64,6 +65,7 @@ def main() :
 #initialisation des Button du Home Menu et du mode de création avec un tableau
     homeButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
     editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
+
 #-----------------------------------------------------------     
 #-----------------------------------------------------------     
 #class des différents évenement de mainWindow
@@ -80,7 +82,7 @@ def main() :
             self.update()
 #-----------------------------------------------------------            
          def mousePressEvent(self, event):
-            nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement
+            nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement, userRotation
             clickPos = cursorPos
             
             if not intWindowMode == 0 and canvasExample.contains(cursorPos):
@@ -88,10 +90,8 @@ def main() :
                 userElement = userElement + 1
                 initClick = False
                 
-                if userElement == len(dictElementElec) and intWindowMode == 1:
+                if userElement == len(dictElementElec) and intWindowMode == 1 or userElement == len(dictElementLogic) and intWindowMode == 2:
                     userElement = 0
-                elif userElement == len(dictElementLogic) and intWindowMode == 2:
-                    userElement =0
                 
             elif not intWindowMode == 0 and canvas.contains(cursorPos):
                clickCanvas = True
@@ -104,7 +104,8 @@ def main() :
             self.update()
 #-----------------------------------------------------------
          def paintEvent(self, event):
-            nonlocal H, L, clickCanvas, initClick, clickPos, cursorPos, canvas, dictElementElec, canvasExample, lineMode
+            nonlocal clickCanvas, initClick, clickPos, cursorPos
+            nonlocal canvas, dictElementElec, canvasExample, lineMode
             
             #initialisation du QPainter
             painter = QPainter(self)
@@ -114,24 +115,29 @@ def main() :
             painter.setPen(pen)
             #dessin du canvas
             if not intWindowMode == 0 :
-                
                 painter.setBrush(brush)
                 painter.drawRect(canvas)
                 painter.drawRect(canvasExample)    
                 painter.setBrush(Qt.NoBrush)
-                
+            
             if initClick:
                 clickPos = cursorPos
             
-            if clickCanvas and intWindowMode == 1 and not lineMode:
-                dictElementElec[userElement](painter)
+            if clickCanvas and not intWindowMode == 0 and not lineMode:
+                if intWindowMode == 1:
+                    dictElementElec[userElement](painter)
+                elif intWindowMode == 2:
+                    dictElementLogic[userElement](painter)
                 
-            elif clickCanvas and intWindowMode == 2 and not lineMode:
-                dictElementLogic[userElement](painter)
-            
-            elif lineMode and clickCanvas and canvas.contains(clickPos) and (intWindowMode == 2 or intWindowMode == 1):
+            if clickCanvas and not intWindowMode == 0 and canvas.contains(cursorPos) and not canvasExample.contains(clickPos) and not lineMode :
+                if intWindowMode == 1:
+                    dictElementElec[userElement](painter)
+                elif intWindowMode == 2:
+                    dictElementLogic[userElement](painter)
+                    
+            elif lineMode and clickCanvas and canvas.contains(clickPos) and not intWindowMode == 0 :
                 painter.drawLine(clickPos.x(), clickPos.y(), cursorPos.x(), cursorPos.y())
-            
+                                    
             self.update()
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
@@ -223,8 +229,7 @@ def main() :
             self.drawLine(createLine(-1, 3, -1, 5))
             self.drawLine(createLine(1, 3, 1, 5))
 #----------------------------------------------------------     
-#-----------------------------------------------------------     
-#-----------------------------------------------------------     
+#----------------------------------------------------------     
 #"dicitonaire" faisant l'office d'un "Switch Case" et regroupe toutes les fonctions de la class element dans un tableau, il ne reste plus qu'à faire dictElementElec[int](painter)
     dictElementElec = {
            0 : elementElec.resistance,
@@ -323,6 +328,13 @@ def main() :
         
         return QLine(newX1, newY1, newX2, newY2)
     
+    def createHalfAngle(startAngle):
+        nonlocal userRotation
+        if startAngle == 0:
+            return math.degrees(math.pi)*16
+        else :
+            return math.degrees(startAngle-userRotation)*16
+        
     def createEllipse(x, y, largeur, hauteur): #faut faire la rotation sur le cercle en lui même donc la c'est faux
         nonlocal clickPos, coefElement, userRotation
         
@@ -332,15 +344,7 @@ def main() :
         newX2 = ((2*largeur)*math.cos(userRotation)*coefElement - (2*hauteur)*math.sin(userRotation)*coefElement) / 2
         newY2 = ((2*largeur)*math.sin(userRotation)*coefElement + (2*hauteur)*math.cos(userRotation)*coefElement) / 2
 
-        
         return QRect(newX1, newY1, newX2, newY2)
-    
-    def createHalfAngle(startAngle):
-        nonlocal userRotation
-        if startAngle == 0:
-            return math.degrees(math.pi)*16
-        else :
-            return math.degrees(startAngle-userRotation)*16
 #-----------------------------------------------------------           
     def createButton(posX, posY, sizeX, sizeY, texte, widget, callBack) :
         
@@ -388,6 +392,7 @@ def main() :
             initClick = False
     def null():
         print("null")
+        
 #cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
         nonlocal H, L, mainWindow, canvas, homeButton, editorButton, intWindowMode
@@ -439,5 +444,5 @@ def main() :
     mainWindow.show()
     sys.exit(app.exec_())
 #-----------------------------------------------------------   
-    
+
 main() 
