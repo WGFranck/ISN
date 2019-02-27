@@ -44,7 +44,7 @@ def main() :
 #initialisation des positions
     cursorPos = QPoint()
     clickPos = QPoint()
-    print(math.cos(math.pi))
+
 #Taille des éléments MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-coefElement >= 2 et coefElement pair et c'est lisible quand c'est >=6
@@ -52,6 +52,7 @@ def main() :
     
 #élement choisit par l'utilisateur    
     userElement = 0
+    userRotation = 0
     
     intWindowMode = 0
     
@@ -64,7 +65,7 @@ def main() :
   
 #initialisation des Button du Home Menu et du mode de création avec un tableau
     homeButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
-    editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
+    editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
 #-----------------------------------------------------------     
 #-----------------------------------------------------------     
 #class des différents évenement de mainWindow
@@ -142,7 +143,10 @@ def main() :
 #-----------------------------------------------------------     
         def resistance(self):
             #base
-            self.drawRect(createPointX(-1), createPointY(-2), 2*coefElement, 4*coefElement)
+            self.drawLine(createLine(-1, -2, 1, -2))
+            self.drawLine(createLine(1, -2, 1, 2))
+            self.drawLine(createLine(1, 2, -1, 2))
+            self.drawLine(createLine(-1, 2, -1, -2))
             #cable
             self.drawLine(createLine(0, -4, 0, -2))
             self.drawLine(createLine(0, 4, 0, 2))
@@ -192,21 +196,15 @@ def main() :
             self.drawLine(createLine(0, 2, 0, 4))
 #-----------------------------------------------------------
         def coil(self):
-            
             #cable
             self.drawLine(createLine(0, -4, 0, -2))
             self.drawLine(createLine(0, 4, 0, 2))
-            #definition de la zone à concerver (pour avoir un arc de cercle)
-            regElement = QtGui.QRegion(QRect(createPointX(-0.5), createPointY(-4), 1*coefElement, 8*coefElement))
-            saveZone = QtGui.QRegion(QRect(createPointX(0)-2, createPointY(-4), 0.5*coefElement+4, 8*coefElement))
-            finalZone = regElement.intersected(saveZone)
-            #définition de la nouvelle zone de dessin
-            self.setClipRegion(finalZone)
-            #base (avec le surplus)
-            self.drawEllipse(createPointX(-0.5), createPointY(-2), 1*coefElement, 1*coefElement)
-            self.drawEllipse(createPointX(-0.5), createPointY(-1), 1*coefElement, 1*coefElement)
-            self.drawEllipse(createPointX(-0.5), createPointY(0), 1*coefElement, 1*coefElement)
-            self.drawEllipse(createPointX(-0.5), createPointY(1), 1*coefElement, 1*coefElement)
+            #base 
+            self.drawArc(createEllipse(0, -1.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
+            self.drawArc(createEllipse(0, -0.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
+            self.drawArc(createEllipse(0, 0.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
+            self.drawArc(createEllipse(0, 1.5, 1, 1), createHalfAngle(1), createHalfAngle(0))
+
 #-----------------------------------------------------------
         def capacitor(self):
             #base
@@ -350,6 +348,12 @@ def main() :
         lineMode = False
         windowMode(0)
         
+    def addRotation():
+        nonlocal userRotation
+        userRotation = userRotation + math.pi/2
+        if userRotation == math.pi*2:
+            userRotation = 0
+        
     def buttonlineMode():
         nonlocal lineMode, initClick, editorButton, clickCanvas
 
@@ -382,8 +386,7 @@ def main() :
         return clickPos.y()+Y*coefElement
   
     def createLine(x1, y1, x2, y2):
-        nonlocal clickPos, coefElement
-        userRotation = math.pi / 2
+        nonlocal clickPos, coefElement, userRotation
         
         newX1 = clickPos.x() + x1*math.cos(userRotation)*coefElement - y1*math.sin(userRotation)*coefElement
         newY1 = clickPos.y() + x1*math.sin(userRotation)*coefElement + y1*math.cos(userRotation)*coefElement
@@ -391,6 +394,20 @@ def main() :
         newY2 = clickPos.y() + x2*math.sin(userRotation)*coefElement + y2*math.cos(userRotation)*coefElement
         
         return QLine(newX1, newY1, newX2, newY2)
+    
+    def createEllipse(x, y, largeur, hauteur):
+        nonlocal clickPos, coefElement, userRotation
+        
+        newX = clickPos.x() + (x-largeur/2)*math.cos(userRotation)*coefElement - (y-hauteur/2)*math.sin(userRotation)*coefElement
+        newY = clickPos.y() + (x-largeur/2)*math.sin(userRotation)*coefElement + (y-hauteur/2)*math.cos(userRotation)*coefElement
+        return QRect(newX, newY, largeur*coefElement, hauteur*coefElement)
+    
+    def createHalfAngle(isStartAngle):
+        nonlocal userRotation
+        if isStartAngle:
+            return math.degrees(userRotation-math.pi/2)*16
+        else :
+            return math.degrees(math.pi)*16
     
 #cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
@@ -418,7 +435,8 @@ def main() :
             editorButton[1] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, null)
             editorButton[2] = createButton((L*3/4), (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)    
             editorButton[3] = createButton((L*3/4), (H*8/9), (L/4)-20, (H/8)-20, "Fermer l'application", mainWindow, closeProg)
-        
+            editorButton[4] = createButton((L*3/12), (H*8/9), (L/8)-20, (H/8)-20, "Rotation", mainWindow, addRotation)
+            
         mainWindow.show()
         
 #Initialisation du mainWindow et le place théoriquement en fonciton de de la resolution de l'écran 
