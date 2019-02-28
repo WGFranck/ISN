@@ -3,14 +3,10 @@
 """
 #A faire :
 
-#-avoir plusieur éléments en même temps
-
 #-le texte "besoin d'aide/Mode d'emploi" (peut être en ouvrant un .doc sur World ?)
 
 #-peut être une QDockWindow pour demander la taille de la fenêtre et le coefElement avant de lancer main() 
 #vue que l'interface est en fonction de L et H
-
-#hypothèse : utiliser une boucle for et un newElement = turple[len(turple.lenght) + 1] pour aficher tout les elements
 
 #-Appuyer sur shift quand lineMode is checked pour faire des lignes horizontal ou verticale
 
@@ -18,9 +14,6 @@
 
 #créer peut être à la fin un mode save-load
 
-#Rotation des ellipses car c'est pas encore ça
-
-#pour clear all faut reinsialiser les tableaux des éléments
 
 import sys, math
 from PyQt5 import QtGui, QtWidgets
@@ -41,9 +34,11 @@ def main() :
     
 #l'utilisateur doit clicker une prmière fois pour appeler un élément puis un second click pour le placer sur le canevas
     initClick = False
+    
 #initialisation des positions
     cursorPos = QPoint()
     clickPos = QPoint()
+    
 #Taille des éléments MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-coefElement >= 2 et coefElement pair et c'est lisible quand c'est >=6
@@ -56,9 +51,11 @@ def main() :
     intWindowMode = 0
     
     lineMode = False
+    
 #taille du canevas en fonction de la taille de l'écran non modifiable par l'utilisateur 
 #-valeur pour intWindowMode = 0 servira pour afficher une image
     canvas = QRect(10, 10, L-20, (H/2)-20)
+    
 #Canvas Example est le canvas qui permet de changer d'element (théoriquement)    
     canvasExample = QRect((L/2)-50, (H*8/9)-50, L/7, H/7) 
   
@@ -66,6 +63,14 @@ def main() :
     homeButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
     editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
 
+    elementOnCanvas = {}
+    elementOnCanvas[0] = 0
+    
+    elementOnCanvasPos = {}
+    elementOnCanvasPos[0] = 0
+    
+    elementOnCanvasRotation = {}
+    elementOnCanvasRotation[0] = 0
 #-----------------------------------------------------------     
 #-----------------------------------------------------------     
 #class des différents évenement de mainWindow
@@ -86,26 +91,27 @@ def main() :
             clickPos = cursorPos
             
             if not intWindowMode == 0 and canvasExample.contains(cursorPos):
-                clickCanvas = True
+                clickCanvas = False
                 userElement = userElement + 1
                 initClick = False
                 
                 if userElement == len(dictElementElec) and intWindowMode == 1 or userElement == len(dictElementLogic) and intWindowMode == 2:
                     userElement = 0
                 
-            elif not intWindowMode == 0 and canvas.contains(cursorPos):
+            elif not intWindowMode == 0 and canvas.contains(cursorPos) and not canvasExample.contains(clickPos):
                clickCanvas = True
                initClick = not initClick
                
-            elif not intWindowMode == 0 and not canvas.contains(cursorPos) and not canvasExample.contains(cursorPos):
+            elif not intWindowMode == 0 and (not canvas.contains(cursorPos) or canvasExample.contains(cursorPos)):
                 print("vous n'êtes pas dans la zone de travail")
                 clickCanvas = False
                 
             self.update()
 #-----------------------------------------------------------
          def paintEvent(self, event):
-            nonlocal clickCanvas, initClick, clickPos, cursorPos
+            nonlocal clickCanvas, initClick, clickPos, cursorPos, userRotation
             nonlocal canvas, dictElementElec, canvasExample, lineMode
+            nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation
             
             #initialisation du QPainter
             painter = QPainter(self)
@@ -113,6 +119,7 @@ def main() :
             pen = QtGui.QPen(Qt.black)
             pen.setWidth(2)
             painter.setPen(pen)
+            
             #dessin du canvas
             if not intWindowMode == 0 :
                 painter.setBrush(brush)
@@ -120,24 +127,60 @@ def main() :
                 painter.drawRect(canvasExample)    
                 painter.setBrush(Qt.NoBrush)
             
-            if initClick:
-                clickPos = cursorPos
-            
-            if clickCanvas and not intWindowMode == 0 and not lineMode:
-                if intWindowMode == 1:
-                    dictElementElec[userElement](painter)
-                elif intWindowMode == 2:
-                    dictElementLogic[userElement](painter)
+                temp = clickPos
                 
-            if clickCanvas and not intWindowMode == 0 and canvas.contains(cursorPos) and not canvasExample.contains(clickPos) and not lineMode :
+                clickPos = canvasExample.center()
+                
                 if intWindowMode == 1:
                     dictElementElec[userElement](painter)
                 elif intWindowMode == 2:
                     dictElementLogic[userElement](painter)
                     
+                clickPos = temp
+                
+            if initClick:
+                clickPos = cursorPos
+
+            if clickCanvas and not intWindowMode == 0 and canvas.contains(clickPos) and not canvasExample.contains(cursorPos) and not lineMode :
+                
+                if intWindowMode == 1:
+                    dictElementElec[userElement](painter)
+                elif intWindowMode == 2:
+                    dictElementLogic[userElement](painter)
+                
+                if not initClick:
+                    
+                    if elementOnCanvasPos[0] == 0:
+                        elementOnCanvas[0] = userElement
+                        elementOnCanvasPos[0] = clickPos
+                        elementOnCanvasRotation[0] = userRotation
+                        clickCanvas = False
+                    
+                    else :
+                        elementOnCanvas[len(elementOnCanvas)] = userElement
+                        elementOnCanvasPos[len(elementOnCanvasPos)] = clickPos
+                        elementOnCanvasRotation[len(elementOnCanvasRotation)] = userRotation
+                        clickCanvas = False
+                    
+            if not elementOnCanvasPos[0] == 0  :
+                
+                for n in range(len(elementOnCanvas)):
+                    
+                    temp = userRotation
+                    
+                    clickPos = elementOnCanvasPos[n]
+                    userRotation = elementOnCanvasRotation[n]
+                    if intWindowMode == 1:
+                        dictElementElec[elementOnCanvas[n]](painter)
+                    elif intWindowMode == 2:
+                        dictElementLogic[elementOnCanvas[n]](painter)
+                    
+                    userRotation= temp
+                    clickPos = cursorPos
+                
             elif lineMode and clickCanvas and canvas.contains(clickPos) and not intWindowMode == 0 :
                 painter.drawLine(clickPos.x(), clickPos.y(), cursorPos.x(), cursorPos.y())
-                                    
+                
             self.update()
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
@@ -341,8 +384,8 @@ def main() :
         newX1 = clickPos.x() + (x-largeur/2)*math.cos(userRotation)*coefElement - (y-hauteur/2)*math.sin(userRotation)*coefElement
         newY1 = clickPos.y() + (x-largeur/2)*math.sin(userRotation)*coefElement + (y-hauteur/2)*math.cos(userRotation)*coefElement
 
-        newX2 = largeur*math.cos(userRotation)*coefElement - (2*hauteur)*math.sin(userRotation)*coefElement
-        newY2 = largeur*math.sin(userRotation)*coefElement + (2*hauteur)*math.cos(userRotation)*coefElement
+        newX2 = largeur*math.cos(userRotation)*coefElement - hauteur*math.sin(userRotation)*coefElement
+        newY2 = largeur*math.sin(userRotation)*coefElement + hauteur*math.cos(userRotation)*coefElement
 
         return QRect(newX1, newY1, newX2, newY2)
 #-----------------------------------------------------------           
@@ -364,6 +407,24 @@ def main() :
     def closeProg():
         mainWindow.close()
         
+    def clearAll():
+        nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation
+        nonlocal userRotation, cursorPos, clickPos
+        
+        userRotation = 0
+        
+        elementOnCanvas = {}
+        elementOnCanvas[0] = 0
+    
+        elementOnCanvasPos = {}
+        elementOnCanvasPos[0] = 0
+    
+        elementOnCanvasRotation = {}
+        elementOnCanvasRotation[0] = 0
+        
+        cursorPos = QPoint()
+        clickPos = QPoint()
+        
     def returnHomeMenu():
         nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation
         userElement = 0
@@ -371,6 +432,8 @@ def main() :
         clickCanvas = False
         initClick = False
         lineMode = False
+        
+        clearAll()
         windowMode(0)
         
     def addRotation():
@@ -378,6 +441,7 @@ def main() :
         userRotation = userRotation + math.pi/2
         if userRotation == math.pi*2:
             userRotation = 0
+        print(userRotation)
         
     def buttonlineMode():
         nonlocal lineMode, initClick, editorButton, clickCanvas
@@ -416,7 +480,7 @@ def main() :
 
             editorButton[0] = createButton(10, (H*7/9), (L/4)-20, (H/8)-20, "Cable", mainWindow, buttonlineMode)
             editorButton[0].setCheckable(True)
-            editorButton[1] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, null)
+            editorButton[1] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, clearAll)
             editorButton[2] = createButton((L*3/4), (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)    
             editorButton[3] = createButton((L*3/4), (H*8/9), (L/4)-20, (H/8)-20, "Fermer l'application", mainWindow, closeProg)
             editorButton[4] = createButton((L*3/12), (H*8/9), (L/8)-20, (H/8)-20, "Rotation", mainWindow, addRotation)
@@ -433,7 +497,7 @@ def main() :
     
     mainWindow.setFixedSize(L, H)
     
-#    mainWindow.setWindowIcon(QtGui.QIcon("icon.png"))
+    mainWindow.setWindowIcon(QtGui.QIcon("icon.png"))
     
     mainWindow.setWindowTitle("G.E Schématronique")
     
