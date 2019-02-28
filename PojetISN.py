@@ -10,6 +10,8 @@
 
 #utiliser un QDockWidget pour le texte de "besoin d'aide"
 
+#un mode QCM ?
+
 #créer peut être à la fin un mode save-load
 
 import sys, math
@@ -59,8 +61,8 @@ def main() :
     canvasExample = QRect((L/2)-50, (H*8/9)-50, L/7, H/7) 
   
 #initialisation des Button du Home Menu et du mode de création avec un tableau
-    homeButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
-    editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
+    homeButton = {}
+    editorButton = {}
 
     elementOnCanvas = {}
     elementOnCanvas[0] = 0
@@ -548,7 +550,7 @@ def main() :
         
         if state == 0 :
             mainWindow.close()
-            for n in range(len(homeButton)):
+            for n in range(len(editorButton)):
                 editorButton[n].close()
 
             homeButton[0] = createButton(10, (H*3/6), L-20, (H/6)-10, "Création de schémas électriques", mainWindow, elecMode)
