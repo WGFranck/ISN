@@ -6,10 +6,11 @@
 #-peut être une QDockWindow pour demander la taille de la fenêtre et le coefElement avant de lancer main() 
 #vue que l'interface est en fonction de L et H
 
+#un pushbutton pour mettre du texte pour les unitée et les valeurs
+
 #utiliser un QDockWidget pour le texte de "besoin d'aide"
 
 #créer peut être à la fin un mode save-load
-
 
 import sys, math
 from PyQt5 import QtGui, QtWidgets
@@ -31,6 +32,7 @@ def main() :
 #l'utilisateur doit clicker une prmière fois pour appeler un élément puis un second click pour le placer sur le canevas
     initClick = False
     
+    rightClickCanvas = False
 #initialisation des positions
     cursorPos = QPoint()
     clickPos = QPoint()
@@ -51,7 +53,7 @@ def main() :
     
 #taille du canevas en fonction de la taille de l'écran non modifiable par l'utilisateur 
 #-valeur pour intWindowMode = 0 servira pour afficher une image
-    canvas = QRect(10, 10, L-20, (H/2)-20)
+    canvas = QRect(10, 10, L-20, (H*7/9)-20)
     
 #Canvas Example est le canvas qui permet de changer d'element (théoriquement)    
     canvasExample = QRect((L/2)-50, (H*8/9)-50, L/7, H/7) 
@@ -88,9 +90,16 @@ def main() :
 
 #-----------------------------------------------------------            
          def mousePressEvent(self, event):
-            nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement
-            nonlocal userRotation, startLinePos, lineMode
+            nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement, intWindowMode
+            nonlocal userRotation, startLinePos, lineMode, rightClickCanvas
             
+            if event.button() == Qt.RightButton and canvas.contains(canvas) and not intWindowMode == 0:
+                rightClickCanvas = True
+                clickCanvas = False
+                
+                if not lineMode:
+                    initClick = True
+                
             if initClick:
                 clickPos = cursorPos
                 if lineMode:    
@@ -111,11 +120,12 @@ def main() :
             elif not intWindowMode == 0 and (not canvas.contains(cursorPos) or canvasExample.contains(cursorPos)):
                 print("vous n'êtes pas dans la zone de travail")
                 clickCanvas = False
+                initClick = False
                 
             self.update()
 #-----------------------------------------------------------
          def paintEvent(self, event):
-            nonlocal clickCanvas, initClick, clickPos, cursorPos, startLinePos, userRotation
+            nonlocal clickCanvas, initClick, clickPos, cursorPos, startLinePos, userRotation, rightClickCanvas
             nonlocal canvas, dictElementElec, canvasExample, lineMode, linearMode
             nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation, lineOnCanvas
             
@@ -154,7 +164,7 @@ def main() :
                 elif intWindowMode == 2:
                     dictElementLogic[userElement](painter)
                 
-                if not initClick:
+                if not initClick and not rightClickCanvas:
                     
                     if elementOnCanvasPos[0] == 0:
                         elementOnCanvas[0] = userElement
@@ -167,6 +177,10 @@ def main() :
                         elementOnCanvasPos[len(elementOnCanvasPos)] = clickPos
                         elementOnCanvasRotation[len(elementOnCanvasRotation)] = userRotation
                         clickCanvas = False
+                        
+                elif rightClickCanvas:
+                    clickCanvas = False
+                    rightClickCanvas = False
                     
             if not elementOnCanvasPos[0] == 0  :
                 
@@ -206,14 +220,25 @@ def main() :
                     
                 painter.drawLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
                 
-                if initClick:
+                if initClick and not rightClickCanvas:
                     if lineOnCanvas[0] == 0:
                         lineOnCanvas[0] = QLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
-                        clickCanvas = False
-                        
+                        clickCanvas = True
+                        initClick = False
+                        startLinePos = cursorPos
+
                     else :
                         lineOnCanvas[len(lineOnCanvas)] = QLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
-                        clickCanvas = False
+                        clickCanvas = True
+                        initClick = False
+                        startLinePos = cursorPos
+
+                elif rightClickCanvas:
+                    clickCanvas = False
+                    initClick = True
+                    rightClickCanvas = False
+                    startLinePos = cursorPos
+                    
             self.update()
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
@@ -304,6 +329,15 @@ def main() :
             self.drawLine(createLine(0, -3, 0, -5))
             self.drawLine(createLine(-1, 3, -1, 5))
             self.drawLine(createLine(1, 3, 1, 5))
+            
+        def arrowVoltage(self):
+            self.drawLine(createLine(0, -3, 0, 3))
+            self.drawLine(createLine(-0.5, -2.5, 0, -3))
+            self.drawLine(createLine(0, -3, 0.5, -2.5))
+            
+        def arrowCurrent(self):
+            self.drawLine(createLine(-0.5, 0, 0, -1))
+            self.drawLine(createLine(0, -1, 0.5, 0))
 #----------------------------------------------------------     
 #----------------------------------------------------------     
 #"dicitonaire" faisant l'office d'un "Switch Case" et regroupe toutes les fonctions de la class element dans un tableau, il ne reste plus qu'à faire dictElementElec[int](painter)
@@ -316,7 +350,9 @@ def main() :
            5 : elementElec.transistor,
            6 : elementElec.coil,
            7 : elementElec.capacitor,
-           8 : elementElec.AOP, }
+           8 : elementElec.AOP,
+           9 : elementElec.arrowVoltage,
+           10 : elementElec.arrowCurrent, }
 #-----------------------------------------------------------     
 #-----------------------------------------------------------
 #-----------------------------------------------------------     
@@ -442,7 +478,7 @@ def main() :
         
     def clearAll():
         nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation
-        nonlocal userRotation, cursorPos, clickPos, lineOnCanvas
+        nonlocal userRotation, cursorPos, clickPos, lineOnCanvas, lineMode, initClick
         
         userRotation = 0
         
@@ -460,6 +496,10 @@ def main() :
         
         lineOnCanvas = {}
         lineOnCanvas[0] = 0
+        
+        if lineMode:
+            initClick = True
+        
     def returnHomeMenu():
         nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation, linearMode
         userElement = 0
@@ -510,7 +550,6 @@ def main() :
             mainWindow.close()
             for n in range(len(homeButton)):
                 editorButton[n].close()
-            canvas = QRect(10, 10, L-20, (H/2)-20)
 
             homeButton[0] = createButton(10, (H*3/6), L-20, (H/6)-10, "Création de schémas électriques", mainWindow, elecMode)
             homeButton[1] = createButton(10, (H*4/6), L-20, (H/6)-10, "Création de schémas logiques", mainWindow, logicMode)
@@ -520,7 +559,6 @@ def main() :
             mainWindow.close()
             for n in range(len(homeButton)) :
                 homeButton[n].close()
-            canvas.setRect(10, 10, L-20, (H*7/9)-20)
 
             editorButton[0] = createButton(10, (H*7/9), (L/4)-20, (H/8)-20, "Cable", mainWindow, buttonlineMode)
             editorButton[0].setCheckable(True)
@@ -544,8 +582,12 @@ def main() :
     
     mainWindow.setFixedSize(L, H)
     
-    mainWindow.setWindowIcon(QtGui.QIcon("icon.png"))
+    mainWindow.setWindowIcon(QtGui.QIcon("images/icon.png"))
     
+    logoHomeMenu = QtWidgets.QLabel(mainWindow)
+    logoHomeMenu.setPixmap(QtGui.QPixmap("images/imageHomeMenu"))
+    logoHomeMenu.move(10, 10)
+    logoHomeMenu.resize(L-20, (H/2)-20)
     mainWindow.setWindowTitle("G.E Schématronique")
     
     mainWindow.setCentralWidget(windowEvent())
