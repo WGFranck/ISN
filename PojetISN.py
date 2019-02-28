@@ -3,12 +3,8 @@
 """
 #A faire :
 
-#-le texte "besoin d'aide/Mode d'emploi" (peut être en ouvrant un .doc sur World ?)
-
 #-peut être une QDockWindow pour demander la taille de la fenêtre et le coefElement avant de lancer main() 
 #vue que l'interface est en fonction de L et H
-
-#-Appuyer sur shift quand lineMode is checked pour faire des lignes horizontal ou verticale
 
 #utiliser un QDockWidget pour le texte de "besoin d'aide"
 
@@ -42,7 +38,7 @@ def main() :
 #Taille des éléments MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-coefElement >= 2 et coefElement pair et c'est lisible quand c'est >=6
-    coefElement = 8 
+    coefElement = 10
     
 #élement choisit par l'utilisateur    
     userElement = 0
@@ -50,6 +46,7 @@ def main() :
     
     intWindowMode = 0
     
+    linearMode = False
     lineMode = False
     
 #taille du canevas en fonction de la taille de l'écran non modifiable par l'utilisateur 
@@ -61,7 +58,7 @@ def main() :
   
 #initialisation des Button du Home Menu et du mode de création avec un tableau
     homeButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
-    editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
+    editorButton = [QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton(), QtWidgets.QPushButton()]
 
     elementOnCanvas = {}
     elementOnCanvas[0] = 0
@@ -82,12 +79,13 @@ def main() :
          def __init__(self):
             super().__init__()
             self.setMouseTracking(True)
+            self.setFocusPolicy(True)
 #-----------------------------------------------------------
          def mouseMoveEvent(self, event):
             nonlocal cursorPos
             cursorPos = event.pos()
-
             self.update()
+
 #-----------------------------------------------------------            
          def mousePressEvent(self, event):
             nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement
@@ -118,7 +116,7 @@ def main() :
 #-----------------------------------------------------------
          def paintEvent(self, event):
             nonlocal clickCanvas, initClick, clickPos, cursorPos, startLinePos, userRotation
-            nonlocal canvas, dictElementElec, canvasExample, lineMode
+            nonlocal canvas, dictElementElec, canvasExample, lineMode, linearMode
             nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation, lineOnCanvas
             
             #initialisation du QPainter
@@ -194,16 +192,17 @@ def main() :
             
             if lineMode and clickCanvas and canvas.contains(clickPos) and not intWindowMode == 0 :
                 
+                if linearMode:
+                    
+                    temp = cursorPos-startLinePos
+                    temp1 = temp.x()
+                    temp2 = temp.y()
                 
-                temp = cursorPos-startLinePos
-                temp1 = temp.x()
-                temp2 = temp.y()
-                
-                if abs(temp1) <= abs(temp2):
-                    cursorPos.setX(startLinePos.x())
+                    if abs(temp1) <= abs(temp2):
+                        cursorPos.setX(startLinePos.x())
 
-                elif abs(temp2) <= abs(temp1) :
-                    cursorPos.setY(startLinePos.y())
+                    elif abs(temp2) <= abs(temp1) :
+                        cursorPos.setY(startLinePos.y())
                     
                 painter.drawLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
                 
@@ -462,12 +461,13 @@ def main() :
         lineOnCanvas = {}
         lineOnCanvas[0] = 0
     def returnHomeMenu():
-        nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation
+        nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation, linearMode
         userElement = 0
         userRotation = 0
         clickCanvas = False
         initClick = False
         lineMode = False
+        linearMode = False
         
         clearAll()
         windowMode(0)
@@ -489,13 +489,22 @@ def main() :
         else :
             lineMode = False
             initClick = False
+            
+    def changeLinearMode():
+        nonlocal linearMode, lineMode, clickCanvas, editorButton, initClick
+       
+        if editorButton[1].isChecked() :
+            linearMode = True            
+        else :
+            linearMode = False
+        
     def null():
         print("null")
         
 #cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
         nonlocal H, L, mainWindow, canvas, homeButton, editorButton, intWindowMode
-        intWindowMode = state
+        intWindowMode = state 
         
         if state == 0 :
             mainWindow.close()
@@ -515,11 +524,14 @@ def main() :
 
             editorButton[0] = createButton(10, (H*7/9), (L/4)-20, (H/8)-20, "Cable", mainWindow, buttonlineMode)
             editorButton[0].setCheckable(True)
-            editorButton[1] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, clearAll)
-            editorButton[2] = createButton((L*3/4), (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)    
-            editorButton[3] = createButton((L*3/4), (H*8/9), (L/4)-20, (H/8)-20, "Fermer l'application", mainWindow, closeProg)
-            editorButton[4] = createButton((L*3/12), (H*8/9), (L/8)-20, (H/8)-20, "Rotation", mainWindow, addRotation)
+            editorButton[1] = createButton((L*3/12), (H*7/9), (L/8)-20, (H/8)-20, "lineHor/Vert", mainWindow, changeLinearMode)
+            editorButton[1].setCheckable(True)
+            editorButton[2] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, clearAll)
+            editorButton[3] = createButton((L*3/4), (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)    
+            editorButton[4] = createButton((L*3/4), (H*8/9), (L/4)-20, (H/8)-20, "Fermer l'application", mainWindow, closeProg)
+            editorButton[5] = createButton((L*3/12), (H*8/9), (L/8)-20, (H/8)-20, "Rotation", mainWindow, addRotation)
             
+        
         mainWindow.show()
         
 #Initialisation du mainWindow et le place théoriquement en fonciton de de la resolution de l'écran 
