@@ -38,7 +38,7 @@ def main() :
 #initialisation des positions
     cursorPos = QPoint()
     clickPos = QPoint()
-    
+    startLinePos = QPoint()
 #Taille des éléments MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-coefElement >= 2 et coefElement pair et c'est lisible quand c'est >=6
@@ -71,6 +71,9 @@ def main() :
     
     elementOnCanvasRotation = {}
     elementOnCanvasRotation[0] = 0
+    
+    lineOnCanvas = {}
+    lineOnCanvas[0] = 0
 #-----------------------------------------------------------     
 #-----------------------------------------------------------     
 #class des différents évenement de mainWindow
@@ -87,8 +90,13 @@ def main() :
             self.update()
 #-----------------------------------------------------------            
          def mousePressEvent(self, event):
-            nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement, userRotation
-            clickPos = cursorPos
+            nonlocal clickCanvas, initClick, cursorPos, clickPos, userElement
+            nonlocal userRotation, startLinePos, lineMode
+            
+            if initClick:
+                clickPos = cursorPos
+                if lineMode:    
+                    startLinePos = clickPos
             
             if not intWindowMode == 0 and canvasExample.contains(cursorPos):
                 clickCanvas = False
@@ -109,9 +117,9 @@ def main() :
             self.update()
 #-----------------------------------------------------------
          def paintEvent(self, event):
-            nonlocal clickCanvas, initClick, clickPos, cursorPos, userRotation
+            nonlocal clickCanvas, initClick, clickPos, cursorPos, startLinePos, userRotation
             nonlocal canvas, dictElementElec, canvasExample, lineMode
-            nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation
+            nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation, lineOnCanvas
             
             #initialisation du QPainter
             painter = QPainter(self)
@@ -165,8 +173,9 @@ def main() :
             if not elementOnCanvasPos[0] == 0  :
                 
                 for n in range(len(elementOnCanvas)):
-                    
                     temp = userRotation
+                    temp2 = clickPos
+                    
                     
                     clickPos = elementOnCanvasPos[n]
                     userRotation = elementOnCanvasRotation[n]
@@ -176,11 +185,28 @@ def main() :
                         dictElementLogic[elementOnCanvas[n]](painter)
                     
                     userRotation= temp
-                    clickPos = cursorPos
+                    clickPos = temp2
                 
-            elif lineMode and clickCanvas and canvas.contains(clickPos) and not intWindowMode == 0 :
-                painter.drawLine(clickPos.x(), clickPos.y(), cursorPos.x(), cursorPos.y())
+            if not lineOnCanvas[0] == 0:
+                for n in range(len(lineOnCanvas)):
+                    painter.drawLine(lineOnCanvas[n])
+            
+            
+            if lineMode and clickCanvas and canvas.contains(clickPos) and not intWindowMode == 0 :
                 
+                painter.drawLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
+                
+                if initClick:
+                    
+                    if lineOnCanvas[0] == 0:
+                        lineOnCanvas[0] = QLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
+                        clickCanvas = False
+                        
+                    else :
+                        lineOnCanvas[len(lineOnCanvas)] = QLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
+                        clickCanvas = False
+                        print(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
+                    
             self.update()
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
@@ -409,7 +435,7 @@ def main() :
         
     def clearAll():
         nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation
-        nonlocal userRotation, cursorPos, clickPos
+        nonlocal userRotation, cursorPos, clickPos, lineOnCanvas
         
         userRotation = 0
         
@@ -425,6 +451,8 @@ def main() :
         cursorPos = QPoint()
         clickPos = QPoint()
         
+        lineOnCanvas = {}
+        lineOnCanvas[0] = 0
     def returnHomeMenu():
         nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation
         userElement = 0
@@ -441,7 +469,6 @@ def main() :
         userRotation = userRotation + math.pi/2
         if userRotation == math.pi*2:
             userRotation = 0
-        print(userRotation)
         
     def buttonlineMode():
         nonlocal lineMode, initClick, editorButton, clickCanvas
