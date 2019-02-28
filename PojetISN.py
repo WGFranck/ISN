@@ -98,7 +98,7 @@ def main() :
                 if lineMode:    
                     startLinePos = clickPos
             
-            if not intWindowMode == 0 and canvasExample.contains(cursorPos):
+            if not intWindowMode == 0 and canvasExample.contains(cursorPos) and not lineMode:
                 clickCanvas = False
                 userElement = userElement + 1
                 initClick = False
@@ -194,10 +194,20 @@ def main() :
             
             if lineMode and clickCanvas and canvas.contains(clickPos) and not intWindowMode == 0 :
                 
+                
+                temp = cursorPos-startLinePos
+                temp1 = temp.x()
+                temp2 = temp.y()
+                
+                if abs(temp1) <= abs(temp2):
+                    cursorPos.setX(startLinePos.x())
+
+                elif abs(temp2) <= abs(temp1) :
+                    cursorPos.setY(startLinePos.y())
+                    
                 painter.drawLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
                 
                 if initClick:
-                    
                     if lineOnCanvas[0] == 0:
                         lineOnCanvas[0] = QLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
                         clickCanvas = False
@@ -205,8 +215,6 @@ def main() :
                     else :
                         lineOnCanvas[len(lineOnCanvas)] = QLine(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
                         clickCanvas = False
-                        print(startLinePos.x(), startLinePos.y(), cursorPos.x(), cursorPos.y())
-                    
             self.update()
 #-----------------------------------------------------------
 #-----------------------------------------------------------   
