@@ -341,8 +341,8 @@ def main() :
         newX1 = clickPos.x() + (x-largeur/2)*math.cos(userRotation)*coefElement - (y-hauteur/2)*math.sin(userRotation)*coefElement
         newY1 = clickPos.y() + (x-largeur/2)*math.sin(userRotation)*coefElement + (y-hauteur/2)*math.cos(userRotation)*coefElement
 
-        newX2 = ((2*largeur)*math.cos(userRotation)*coefElement - (2*hauteur)*math.sin(userRotation)*coefElement) / 2
-        newY2 = ((2*largeur)*math.sin(userRotation)*coefElement + (2*hauteur)*math.cos(userRotation)*coefElement) / 2
+        newX2 = largeur*math.cos(userRotation)*coefElement - (2*hauteur)*math.sin(userRotation)*coefElement
+        newY2 = largeur*math.sin(userRotation)*coefElement + (2*hauteur)*math.cos(userRotation)*coefElement
 
         return QRect(newX1, newY1, newX2, newY2)
 #-----------------------------------------------------------           
@@ -433,7 +433,7 @@ def main() :
     
     mainWindow.setFixedSize(L, H)
     
-    mainWindow.setWindowIcon(QtGui.QIcon("icon.png"))
+#    mainWindow.setWindowIcon(QtGui.QIcon("icon.png"))
     
     mainWindow.setWindowTitle("G.E Schématronique")
     
