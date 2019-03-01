@@ -25,8 +25,8 @@ def main() :
 #Taille de la fenètre MODIFIABLE dans le programme
 #-et modifiable un jour par l'utilisateur 
 #-toute taille disponible tant que c'est suppérieur 250 et pair
-    L  = 700
-    H = 800
+    L  = 600
+    H = 600
     
 #Booléan du boutton de la souris pour la position des éléments.
     clickCanvas = False
@@ -50,9 +50,9 @@ def main() :
     
     intWindowMode = 0
     
-    linearMode = False
     lineMode = False
-    
+    linearMode = False
+    cadriageMode = False
 #taille du canevas en fonction de la taille de l'écran non modifiable par l'utilisateur 
 #-valeur pour intWindowMode = 0 servira pour afficher une image
     canvas = QRect(10, 10, L-20, (H*7/9)-20)
@@ -128,7 +128,7 @@ def main() :
 #-----------------------------------------------------------
          def paintEvent(self, event):
             nonlocal clickCanvas, initClick, clickPos, cursorPos, startLinePos, userRotation, rightClickCanvas
-            nonlocal canvas, dictElementElec, canvasExample, lineMode, linearMode
+            nonlocal canvas, dictElementElec, canvasExample, lineMode, linearMode, cadriageMode
             nonlocal elementOnCanvas, elementOnCanvasPos, elementOnCanvasRotation, lineOnCanvas
             
             #initialisation du QPainter
@@ -156,6 +156,20 @@ def main() :
                     
                 clickPos = temp
                 
+            if cadriageMode:
+                
+               pen.setWidth(1) 
+               painter.setPen(pen)
+               painter.setClipRect(canvas)
+               
+               for n in range(2*coefElement):
+                   painter.drawLine(0, (H*n)/(2*coefElement), L, (H*n)/(2*coefElement))
+                   painter.drawLine((L*n)/(2*coefElement), 0, (L*n)/(2*coefElement), H)
+               
+               painter.setClipRect(0, 0, L, H)
+               pen.setWidth(2) 
+               painter.setPen(pen) 
+               
             if initClick:
                 clickPos = cursorPos
 
@@ -503,13 +517,14 @@ def main() :
             initClick = True
         
     def returnHomeMenu():
-        nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation, linearMode
+        nonlocal userElement, clickCanvas, initClick, lineMode, clickCanvas, userRotation, linearMode, cadriageMode
         userElement = 0
         userRotation = 0
         clickCanvas = False
         initClick = False
         lineMode = False
         linearMode = False
+        cadriageMode = False
         
         clearAll()
         windowMode(0)
@@ -533,23 +548,32 @@ def main() :
             initClick = False
             
     def changeLinearMode():
-        nonlocal linearMode, lineMode, clickCanvas, editorButton, initClick
+        nonlocal linearMode, editorButton
        
         if editorButton[1].isChecked() :
             linearMode = True            
         else :
             linearMode = False
-        
+            
+    def changeCadriageMode():
+        nonlocal editorButton, cadriageMode
+       
+        if editorButton[4].isChecked() :
+            cadriageMode = True            
+        else :
+            cadriageMode = False
+            
     def null():
         print("null")
         
 #cette fonction a pour but de regler les bouttons des deux modes (home et création)
     def windowMode(state):
-        nonlocal H, L, mainWindow, canvas, homeButton, editorButton, intWindowMode
+        nonlocal H, L, mainWindow, canvas, homeButton, editorButton, intWindowMode, logoHomeMenu
         intWindowMode = state 
         
         if state == 0 :
             mainWindow.close()
+            logoHomeMenu.show()
             for n in range(len(editorButton)):
                 editorButton[n].close()
 
@@ -559,19 +583,27 @@ def main() :
             homeButton[3] = createButton((L/2)+10, (H*5/6), (L/2)-20, (H/6)-10, "Fermer l'application", mainWindow, closeProg)
         else :
             mainWindow.close()
+            logoHomeMenu.close()
             for n in range(len(homeButton)) :
                 homeButton[n].close()
 
             editorButton[0] = createButton(10, (H*7/9), (L/4)-20, (H/8)-20, "Cable", mainWindow, buttonlineMode)
             editorButton[0].setCheckable(True)
+            
             editorButton[1] = createButton((L*3/12), (H*7/9), (L/8)-20, (H/8)-20, "lineHor/Vert", mainWindow, changeLinearMode)
             editorButton[1].setCheckable(True)
-            editorButton[2] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, clearAll)
-            editorButton[3] = createButton((L*3/4), (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)    
-            editorButton[4] = createButton((L*3/4), (H*8/9), (L/4)-20, (H/8)-20, "Fermer l'application", mainWindow, closeProg)
-            editorButton[5] = createButton((L*3/12), (H*8/9), (L/8)-20, (H/8)-20, "Rotation", mainWindow, addRotation)
             
-        
+            editorButton[2] = createButton(10, (H*8/9), (L/4)-20, (H/8)-20, "Tout suppimer", mainWindow, clearAll)
+            
+            editorButton[3] = createButton((L*3/4)+10, (H*7/9), (L/4)-20, (H/8)-20, "Retour", mainWindow, returnHomeMenu)
+            
+            editorButton[4] = createButton((L*8/12), (H*7/9), (L/8)-20, (H/8)-20, "cadriage", mainWindow,  changeCadriageMode) 
+            editorButton[4].setCheckable(True)
+            
+            editorButton[5] = createButton((L*3/4)+10, (H*8/9), (L/4)-20, (H/8)-20, "Fermer l'application", mainWindow, closeProg)
+            
+            editorButton[6] = createButton((L*3/12), (H*8/9), (L/8)-20, (H/8)-20, "Rotation", mainWindow, addRotation)
+            
         mainWindow.show()
         
 #Initialisation du mainWindow et le place théoriquement en fonciton de de la resolution de l'écran 
@@ -589,6 +621,7 @@ def main() :
     logoHomeMenu = QtWidgets.QLabel(mainWindow)
     logoHomeMenu.setPixmap(QtGui.QPixmap("images/imageHomeMenu"))
     logoHomeMenu.move(10, 10)
+    logoHomeMenu.setScaledContents(True)
     logoHomeMenu.resize(L-20, (H/2)-20)
     mainWindow.setWindowTitle("G.E Schématronique")
     
